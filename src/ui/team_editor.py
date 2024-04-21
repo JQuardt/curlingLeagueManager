@@ -11,6 +11,7 @@ Ui_MainWindow, QtBaseWindow = uic.loadUiType("ui/team_editor.ui")
 class TeamEditorDialog(QtBaseWindow, Ui_MainWindow):
 
     def __init__(self,  db=None, league=None, team=None, team_title=None, parent=None):
+        """Initializes the Team Editor Dialog window."""
         super().__init__(parent)
         self.database = db
         self.league = league
@@ -33,6 +34,7 @@ class TeamEditorDialog(QtBaseWindow, Ui_MainWindow):
         self.team_list_widget.currentRowChanged.connect(self.team_list_selection_changed)
 
     def team_list_selection_changed(self):
+        """Sets the text for the line edit if the list widget selection changes."""
         current_row = self.team_list_widget.currentRow()
         if current_row != -1:
             member = self.team.members[current_row]
@@ -40,10 +42,12 @@ class TeamEditorDialog(QtBaseWindow, Ui_MainWindow):
             self.member_email_line_edit.setText(member.email)
 
     def warn(self, title, message):
+        """Pop-up window with the warning message of the arguments provided."""
         mb = QMessageBox(QMessageBox.Icon.NoIcon, title, message, QMessageBox.StandardButton.Ok)
         return mb.exec()
 
     def update_ui(self):
+        """Updates the list widget with the league_database."""
         row = self.team_list_selected_row()
         self.team_list_widget.clear()
         for member in self.team.members:
@@ -53,6 +57,7 @@ class TeamEditorDialog(QtBaseWindow, Ui_MainWindow):
             self.team_list_widget.setCurrentItem(self.team_list_widget.item(row))
 
     def team_list_selected_row(self):
+        """Finds and returns the item selected in the list widget. If none, returns -1."""
         selection = self.team_list_widget.selectedItems()
         if len(selection) == 0:
             return -1
@@ -64,6 +69,8 @@ class TeamEditorDialog(QtBaseWindow, Ui_MainWindow):
         return -1
 
     def add_button_clicked(self):
+        """Adds the team member to the team. Creates a pop-up warning if there is information missing,
+        or if the email is duplicated."""
         name = self.member_name_line_edit.text()
         email = self.member_email_line_edit.text()
         if name == "":
@@ -81,6 +88,8 @@ class TeamEditorDialog(QtBaseWindow, Ui_MainWindow):
         self.member_email_line_edit.clear()
 
     def delete_button_clicked(self):
+        """If the delete button is clicked, deletes the selected row from the database.
+                        A window pops up to confirm deletion."""
         row = self.team_list_selected_row()
         if row == -1:
             return self.warn("Select member", "You must select the member to remove.")
@@ -96,6 +105,9 @@ class TeamEditorDialog(QtBaseWindow, Ui_MainWindow):
             self.member_email_line_edit.clear()
 
     def edit_button_clicked(self):
+        """If the edit button is clicked, it changes the selected team member with the information in the
+        line edit. Pops-up a warning if there is no member selected, or if there is information missing in
+        the line edits."""
         row = self.team_list_selected_row()
         if row == -1:
             return self.warn("Select member", "You must select the member to edit.")
@@ -111,6 +123,8 @@ class TeamEditorDialog(QtBaseWindow, Ui_MainWindow):
         self.update_ui()
 
     def button_box_accepted(self):
+        """When the team is finalized, the team is added to the database
+        with the name provided in the name edit."""
         self.database.remove_league(self.league)
         self.league.remove_team(self.team)
         name = self.teams_name_line_edit.text()

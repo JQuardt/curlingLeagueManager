@@ -9,6 +9,8 @@ Ui_MainWindow, QtBaseWindow = uic.loadUiType("ui/league_editor.ui")
 class LeagueEditorDialog(QtBaseWindow, Ui_MainWindow):
 
     def __init__(self, league=None, league_title=None, db=None, parent=None):
+        """Initializes the League Editor Dialog window.
+        Checks if the league argument is a new league, passed league, or none."""
         super().__init__(parent)
         self.database = db
         oid = self.database.next_oid()
@@ -35,19 +37,23 @@ class LeagueEditorDialog(QtBaseWindow, Ui_MainWindow):
         self.rejected.connect(self.league_rejected)
 
     def league_rejected(self):
+        """If the window is closed, then the potential league is removed from the database."""
         self.database.remove_league(self.league)
 
     def editor_list_selection_changed(self):
+        """Sets the text for the line edit if the list widget selection changes."""
         current_row = self.league_editor_list_widget.currentRow()
         if current_row != -1:
             team = self.league.teams[current_row]
             self.team_name_line_edit.setText(team.name)
 
     def warn(self, title, message):
+        """Creates a pop-up box warning about the title and message provided as arguments."""
         mb = QMessageBox(QMessageBox.Icon.NoIcon, title, message, QMessageBox.StandardButton.Ok)
         return mb.exec()
 
     def update_ui(self):
+        """Updates the list widget with the league_database."""
         row = self.league_editor_list_selected_row()
         self.league_editor_list_widget.clear()
         for team in self.league.teams:
@@ -56,6 +62,7 @@ class LeagueEditorDialog(QtBaseWindow, Ui_MainWindow):
             self.league_editor_list_widget.setCurrentItem(self.league_editor_list_widget.item(row))
 
     def league_editor_list_selected_row(self):
+        """Finds and returns the item selected in the list widget. If none, returns -1."""
         selection = self.league_editor_list_widget.selectedItems()
         if len(selection) == 0:
             return -1
@@ -67,6 +74,7 @@ class LeagueEditorDialog(QtBaseWindow, Ui_MainWindow):
         return -1
 
     def add_button_clicked(self):
+        """If the add button is clicked, pops up a Team Editor Dialog window."""
         new_league_name = self.team_name_line_edit.text()
         dialog = TeamEditorDialog(team_title=new_league_name, db=self.database, league=self.league)
         dialog.exec()
@@ -74,6 +82,8 @@ class LeagueEditorDialog(QtBaseWindow, Ui_MainWindow):
         self.team_name_line_edit.clear()
 
     def delete_button_clicked(self):
+        """If the delete button is clicked, deletes the selected row from the database.
+                A window pops up to confirm deletion."""
         row = self.league_editor_list_selected_row()
         if row == -1:
             return self.warn("Select team", "You must select the member to remove.")
@@ -87,6 +97,9 @@ class LeagueEditorDialog(QtBaseWindow, Ui_MainWindow):
             self.team_name_line_edit.clear()
 
     def edit_button_clicked(self):
+        """If the edit button is clicked, pops up a Team Editor Dialog window.
+                Pops up warning window if no team is selected in list widget or
+                if information is missing from the window."""
         row = self.league_editor_list_selected_row()
         if row == -1:
             return self.warn("Select team", "You must select the team to edit.")
@@ -100,12 +113,14 @@ class LeagueEditorDialog(QtBaseWindow, Ui_MainWindow):
         self.update_ui()
 
     def import_button_clicked(self):
+        """Imports a team from a .csv file. A pop-up FileDialog window gets the filename from the user."""
         fd = QFileDialog()
         if fd.exec() == QFileDialog.DialogCode.Accepted:
             self.database.import_league_teams(self.league, fd.selectedFiles()[0])
             self.update_ui()
 
     def export_button_clicked(self):
+        """Exports or saves a team to a .csv file. A pop-up FileDialog window asks where to save the file."""
         (filename, filter_str) = QFileDialog.getSaveFileName(self, "Save CSV File", filter="CSV File (*.csv)")
         if filename:
             self.database.export_league_teams(self.league, filename)
@@ -114,6 +129,8 @@ class LeagueEditorDialog(QtBaseWindow, Ui_MainWindow):
             mb.exec()
 
     def button_box_accepted(self):
+        """If the league is finalized, the league is saved to the database
+        with the team name listed in the line edit."""
         self.database.remove_league(self.league)
         name = self.league_name_line_edit.text()
         if name:

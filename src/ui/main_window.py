@@ -9,6 +9,7 @@ Ui_MainWindow, QtBaseWindow = uic.loadUiType("ui/main_window.ui")
 
 class MainWindow(QtBaseWindow, Ui_MainWindow):
     def __init__(self, parent=None):
+        """Creates the main window for the program."""
         super().__init__(parent)
         self.setupUi(self)
         self.db = LeagueDatabase.instance()
@@ -22,16 +23,20 @@ class MainWindow(QtBaseWindow, Ui_MainWindow):
         self.main_list_widget.currentRowChanged.connect(self.main_list_selection_changed)
 
     def main_list_selection_changed(self):
+        """Called when the main list widget selection is changed.
+        Changes the main list line edit for the league's name."""
         current_row = self.main_list_widget.currentRow()
         if current_row != -1:
             league = self.db.leagues[current_row]
             self.league_line_edit.setText(league.name)
 
     def warn(self, title, message):
+        """Creates a pop-up box warning about the title and message provided as arguments."""
         mb = QMessageBox(QMessageBox.Icon.NoIcon, title, message, QMessageBox.StandardButton.Ok)
         return mb.exec()
 
     def update_ui(self):
+        """Updates the main list widget with the league_database."""
         row = self.main_list_selected_row()
         self.main_list_widget.clear()
         for league in self.db.leagues:
@@ -40,6 +45,7 @@ class MainWindow(QtBaseWindow, Ui_MainWindow):
             self.main_list_widget.setCurrentItem(self.main_list_widget.item(row))
 
     def main_list_selected_row(self):
+        """Finds and returns the item selected in the main list widget. If none, returns -1."""
         selection = self.main_list_widget.selectedItems()
         if len(selection) == 0:
             return -1
@@ -51,6 +57,7 @@ class MainWindow(QtBaseWindow, Ui_MainWindow):
         return -1
 
     def add_button_clicked(self):
+        """If the add button is clicked, pops up a League Editor Dialog window."""
         new_league_name = self.league_line_edit.text()
         dialog = LeagueEditorDialog(league_title=new_league_name, db=self.db)
         dialog.exec()
@@ -58,6 +65,9 @@ class MainWindow(QtBaseWindow, Ui_MainWindow):
         self.league_line_edit.clear()
 
     def edit_button_clicked(self):
+        """If the edit button is clicked, pops up a League Editor Dialog window.
+        Pops up warning window if no league is selected in list widget or
+        if information is missing from the window."""
         row = self.main_list_selected_row()
         if row == -1:
             return self.warn("Select league", "You must select the league to edit.")
@@ -71,6 +81,8 @@ class MainWindow(QtBaseWindow, Ui_MainWindow):
         self.update_ui()
 
     def delete_button_clicked(self):
+        """If the delete button is clicked, deletes the selected row from the database.
+        A window pops up to confirm deletion."""
         row = self.main_list_selected_row()
         if row == -1:
             return self.warn("Select league", "You must select the league to remove.")
